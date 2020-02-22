@@ -31,13 +31,32 @@ class Main extends React.Component{
 
   componentDidMount(){
 
-
+    const scoreDisplay = document.getElementById('score')
+    const livesDisplay = document.getElementById('lives')
+    const ballsIn = document.getElementById('ballsIn')
+    const reset = document.getElementById('reset')
+    let score = 0
+    let lives = 5
 
     const webcamElement = document.getElementById('webcam')
     const canvas = document.getElementById('canvas')
     const instructions = document.getElementById('instructions')
     let playing = false
     let ready = false
+    const drums = ['C3', 'D3', 'F3', 'E3', 'B3']
+    var sampler = new Tone.Sampler({
+      'C3': 'assets/Clap.wav',
+      'D3': 'assets/Kick.wav',
+      'F3': 'assets/Snare.wav',
+      'E3': 'assets/wood.wav',
+      'B3': 'assets/daiko.wav'
+
+    }, function(){
+      //sampler will repitch the closest sample
+      //sampler.triggerAttack("D3")
+      //console.log('loaded')
+      playing = true
+    }).toMaster()
     function setupWebcam() {
       return new Promise((resolve, reject) => {
         const navigatorAny = navigator
@@ -171,13 +190,72 @@ class Main extends React.Component{
     let texture = new THREE.CanvasTexture(canvas);
                  console.log(texture)
 
-              var geometry = new THREE.PlaneGeometry( 4, 2, 24, 12 );
+              var geometry = new THREE.PlaneGeometry( 8, 4, 24, 12 );
               var material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide, map: texture} );
           let plane = new THREE.Mesh( geometry, material );
 
           scene.add(plane)
+          let world, timeStep=1/60, ballBody, ballShape, ballMaterial, wallContactMaterial
 
-          function animate() {
+
+          const ballMeshes = []
+          const balls = []
+let groundBody, groundShape ,wallMaterial
+
+world = new CANNON.World()
+world.gravity.set(0,-20,0)
+world.broadphase = new CANNON.NaiveBroadphase()
+world.solver.iterations = 10
+
+wallMaterial = new CANNON.Material('wallMaterial')
+
+ballMaterial = new CANNON.Material('ballMaterial')
+wallContactMaterial = new CANNON.ContactMaterial(ballMaterial, wallMaterial)
+wallContactMaterial.friction = 0
+wallContactMaterial.restitution = 2
+          groundShape = new CANNON.Box(new CANNON.Vec3(300,300,2))
+      groundBody = new CANNON.Body({ mass: 0, material: wallMaterial })
+      groundBody.addShape(groundShape)
+      groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2)
+      groundBody.position.set(0,0,0)
+      groundBody.position.y = -20
+      world.addBody(groundBody)
+          function ballCreate(x,y){
+  const materialBall = new THREE.MeshPhongMaterial( { color: `rgba(${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},1)`, specular: `rgba(${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},1)` , shininess: 100, side: THREE.DoubleSide, opacity: 0.8,
+    transparent: true } )
+
+  const ballGeometry = new THREE.SphereGeometry(1, 32, 32)
+  const ballMesh = new THREE.Mesh( ballGeometry, materialBall )
+  ballMesh.name = 'ball'
+  scene.add(ballMesh)
+  ballMeshes.push(ballMesh)
+
+
+
+
+  ballShape = new CANNON.Sphere(1)
+  ballBody = new CANNON.Body({ mass: 1, material: ballMaterial })
+  ballBody.addShape(ballShape)
+  ballBody.linearDamping = 0
+  world.addBody(ballBody)
+  balls.push(ballBody)
+  ballBody.position.set(x,y,(Math.random()*-30)-30)
+  ballBody.angularVelocity.y = 3
+  ballBody.addEventListener('collide',function(e){
+
+
+    if(playing){
+
+      sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
+
+
+
+    }
+  })
+}
+ballCreate(Math.floor(Math.random()*25), Math.floor(Math.random()*25))
+const cannonDebugRenderer = new THREE.CannonDebugRenderer( scene, world )
+    function animate() {
 
                 requestAnimationFrame( animate )
                 // controls.update();
@@ -198,8 +276,11 @@ class Main extends React.Component{
       plane.position.x--
 
   }
-
-
+  scoreDisplay.innerHTML = ' '+ score
+      livesDisplay.innerHTML = ' '+ lives
+      if(cannonDebugRenderer){
+        cannonDebugRenderer.update()
+      }
             }
 
             function render() {
@@ -215,12 +296,22 @@ class Main extends React.Component{
   //               if(cannonDebugRenderer){
   //   cannonDebugRenderer.update()
   // }
+  updatePhysics()
                 renderer.render( scene, camera );
 
             }
 
 
             animate()
+            function updatePhysics() {
+      // Step the physics world
+      world.step(timeStep)
+
+      for(var j=0; j<balls.length; j++){
+        ballMeshes[j].position.copy(balls[j].position)
+        ballMeshes[j].quaternion.copy(balls[j].quaternion)
+      }
+    }
   }
 
   componentDidUpdate(){
@@ -238,6 +329,11 @@ class Main extends React.Component{
 
     return (
       <div>
+        <div className="info">
+     Score  :<span id="score" className="banner"></span>
+     Lives  :<span id="lives" className="banner"></span>
+
+        </div>
         <video autoPlay playsInline muted id="webcam" width="500px" height="500px" poster='' ></video>
         <canvas id="canvas" width="500" height="500"></canvas>
 

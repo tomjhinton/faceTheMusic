@@ -1,3 +1,16 @@
+@font-face {
+  font-family: "Passio";
+  src: url("assets/Passio-Graphis.otf") format("opentype");
+}
+
+
+*{
+  font-family: 'Passio';
+  font-weight: bold;
+}
+
+
+
 #canvas{
   position: absolute;
   z-index: -3;
@@ -13,4 +26,22 @@
   z-index: -3;
   visibility: hidden;
   border: 1px solid red;
+}
+
+.info{
+  top:10vh;
+  font-family: "Passio";
+  position: absolute;
+  color: white;
+  align-items: center;
+  font-size: 2em;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.banner{
+  margin-right: 2em;
+  color:red;
+
 }
