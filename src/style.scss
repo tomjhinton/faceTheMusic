@@ -1,14 +1,16 @@
 #canvas{
-  position: relative;
+  position: absolute;
   z-index: -3;
-  dispay: hidden;
+  visibility: hidden;
+  border: 1px solid red;
 
 
 }
 
 
-#webcamElement{
-  position: relative;
+#webcam{
+  position: absolute;
   z-index: -3;
-  display: hidden;
+  visibility: hidden;
+  border: 1px solid red;
 }

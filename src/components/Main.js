@@ -10,6 +10,7 @@ import * as bodyPix from '@tensorflow-models/body-pix'
 import '@babel/polyfill'
 import '@tensorflow/tfjs-core'
 import '@tensorflow/tfjs-converter'
+import '../style.scss'
 
 class Main extends React.Component{
   constructor(){
@@ -172,7 +173,7 @@ class Main extends React.Component{
 
               var geometry = new THREE.PlaneGeometry( 4, 2, 24, 12 );
               var material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide, map: texture} );
-          let    plane = new THREE.Mesh( geometry, material );
+          let plane = new THREE.Mesh( geometry, material );
 
           scene.add(plane)
 
