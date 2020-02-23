@@ -92,12 +92,12 @@ class Main extends React.Component{
                   window.setTimeout(callback, 1000 / 60);
               };
       })();
-            const camera = document.getElementById('webcam');
-        const canvasPerson = document.getElementById("canvas");
-        const multiplier = 0.75;
-        const outputStride = 16;
-        const segmentationThreshold = 0.5;
-        let contextPerson = canvasPerson.getContext('2d');
+            const camera = document.getElementById('webcam')
+        const canvasPerson = document.getElementById("canvas")
+        const multiplier = 0.75
+        const outputStride = 16
+        const segmentationThreshold = 0.5
+        let contextPerson = canvasPerson.getContext('2d')
         let currentStream
         let deviceIds = []
         let selectedDevice
@@ -110,10 +110,10 @@ class Main extends React.Component{
               //alert("Fail to segment person");
             })
             .then(personSegmentation => {
-              drawBody(personSegmentation);
+              drawBody(personSegmentation)
 
             })
-          cameraFrame = window.requestAnimFrame(detectBody);
+          cameraFrame = window.requestAnimFrame(detectBody)
         }
 
         function drawBody(personSegmentation)
@@ -127,8 +127,8 @@ class Main extends React.Component{
               pixel[p+3] = 0;
             }
           }
-          contextPerson.imageSmoothingEnabled = true;
-          contextPerson.putImageData(imageData,0,0);
+          contextPerson.imageSmoothingEnabled = true
+          contextPerson.putImageData(imageData,0,0)
         }
         detectBody()
       }
@@ -147,6 +147,7 @@ class Main extends React.Component{
     ]).then( x=> {
       setupWebcam()
       ready = true
+      ballCreate(Math.floor(Math.random()*25), Math.floor(Math.random()*25))
       // instructions.innerText=
       //   'The balls are controlled by surpised or happy faces.'
     })
@@ -182,135 +183,146 @@ class Main extends React.Component{
     renderer.setSize( window.innerWidth, window.innerHeight )
     document.body.appendChild( renderer.domElement )
     //var controls = new OrbitControls( camera, renderer.domElement );
+    let world, timeStep=1/60, ballBody, ballShape, ballMaterial, wallContactMaterial
 
+
+    const ballMeshes = []
+    const balls = []
+    let groundBody, groundShape ,wallMaterial
+
+    world = new CANNON.World()
+    world.gravity.set(0,-40,0)
+    world.broadphase = new CANNON.NaiveBroadphase()
+    world.solver.iterations = 10
 
     const camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 3000 )
     camera.position.z = 20
 
-    let texture = new THREE.CanvasTexture(canvas);
-                 console.log(texture)
+    let texture = new THREE.CanvasTexture(canvas)
 
-              var geometry = new THREE.PlaneGeometry( 8, 4, 24, 12 );
-              var material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide, map: texture} );
-          let plane = new THREE.Mesh( geometry, material );
+    var geometry = new THREE.PlaneGeometry( 8, 4, 24, 12 );
+    var material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide, map: texture} );
+    let plane = new THREE.Mesh( geometry, material );
 
-          scene.add(plane)
-          let world, timeStep=1/60, ballBody, ballShape, ballMaterial, wallContactMaterial
-
-
-          const ballMeshes = []
-          const balls = []
-let groundBody, groundShape ,wallMaterial
-
-world = new CANNON.World()
-world.gravity.set(0,-20,0)
-world.broadphase = new CANNON.NaiveBroadphase()
-world.solver.iterations = 10
-
-wallMaterial = new CANNON.Material('wallMaterial')
-
-ballMaterial = new CANNON.Material('ballMaterial')
-wallContactMaterial = new CANNON.ContactMaterial(ballMaterial, wallMaterial)
-wallContactMaterial.friction = 0
-wallContactMaterial.restitution = 2
-          groundShape = new CANNON.Box(new CANNON.Vec3(300,300,2))
-      groundBody = new CANNON.Body({ mass: 0, material: wallMaterial })
-      groundBody.addShape(groundShape)
-      groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2)
-      groundBody.position.set(0,0,0)
-      groundBody.position.y = -20
-      world.addBody(groundBody)
-          function ballCreate(x,y){
-  const materialBall = new THREE.MeshPhongMaterial( { color: `rgba(${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},1)`, specular: `rgba(${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},1)` , shininess: 100, side: THREE.DoubleSide, opacity: 0.8,
-    transparent: true } )
-
-  const ballGeometry = new THREE.SphereGeometry(1, 32, 32)
-  const ballMesh = new THREE.Mesh( ballGeometry, materialBall )
-  ballMesh.name = 'ball'
-  scene.add(ballMesh)
-  ballMeshes.push(ballMesh)
+    scene.add(plane)
+    let playerMaterial  = new CANNON.Material('playerMaterial')
+    let  playerShape = new CANNON.Box(new CANNON.Vec3(300,300,2))
+    let playerBody = new CANNON.Body({ mass: 0, material: wallMaterial })
+    groundBody.addShape(groundShape)
+    let groundGeo = new  THREE.BoxBufferGeometry( 600, 600, 4 );
+    var groundMaterial = new THREE.MeshBasicMaterial( {color: 0xff00ff, side: THREE.DoubleSide} );
+    let ground  = new THREE.Mesh( groundGeo, groundMaterial );
+    ground.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2)
+    ground.position.y = -10
+    scene.add(ground)
+    var controls = new OrbitControls( camera, renderer.domElement );
 
 
+    wallMaterial = new CANNON.Material('wallMaterial')
 
+    ballMaterial = new CANNON.Material('ballMaterial')
+    wallContactMaterial = new CANNON.ContactMaterial(ballMaterial, wallMaterial)
+    wallContactMaterial.friction = 0.1
+    wallContactMaterial.restitution = 2
+    groundShape = new CANNON.Box(new CANNON.Vec3(300,300,2))
+    groundBody = new CANNON.Body({ mass: 0, material: wallMaterial })
+    groundBody.addShape(groundShape)
+    groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2)
+    groundBody.position.set(0,0,0)
+    groundBody.position.y = -10
+    world.addBody(groundBody)
+    function ballCreate(x,y){
+      const materialBall = new THREE.MeshPhongMaterial( { color: `rgba(${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},1)`, specular: `rgba(${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},${Math.floor(Math.random()*255)},1)` , shininess: 100, side: THREE.DoubleSide, opacity: 0.8,
+        transparent: true } )
 
-  ballShape = new CANNON.Sphere(1)
-  ballBody = new CANNON.Body({ mass: 1, material: ballMaterial })
-  ballBody.addShape(ballShape)
-  ballBody.linearDamping = 0
-  world.addBody(ballBody)
-  balls.push(ballBody)
-  ballBody.position.set(x,y,(Math.random()*-30)-30)
-  ballBody.angularVelocity.y = 3
-  ballBody.addEventListener('collide',function(e){
-
-
-    if(playing){
-
-      sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
+      const ballGeometry = new THREE.SphereGeometry(1, 32, 32)
+      const ballMesh = new THREE.Mesh( ballGeometry, materialBall )
+      ballMesh.name = 'ball'
+      scene.add(ballMesh)
+      ballMeshes.push(ballMesh)
 
 
 
+
+      ballShape = new CANNON.Sphere(1)
+      ballBody = new CANNON.Body({ mass: 2, material: ballMaterial })
+      ballBody.addShape(ballShape)
+      ballBody.linearDamping = 0
+      world.addBody(ballBody)
+      balls.push(ballBody)
+      ballBody.position.set(x,y,20)
+      ballBody.velocity.z = -10
+      ballBody.addEventListener('collide',function(e){
+        console.log(ballBody)
+
+        if(playing){
+
+          sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
+
+
+
+        }
+      })
     }
-  })
-}
-ballCreate(Math.floor(Math.random()*25), Math.floor(Math.random()*25))
-const cannonDebugRenderer = new THREE.CannonDebugRenderer( scene, world )
+
+    const cannonDebugRenderer = new THREE.CannonDebugRenderer( scene, world )
     function animate() {
 
-                requestAnimationFrame( animate )
-                // controls.update();
+      requestAnimationFrame( animate )
+      // controls.update();
 
-                render()
-                if(texture){
-                texture.needsUpdate = true;
-              }
+      render()
+      if(texture){
+        texture.needsUpdate = true
+      }
 
-              if(happy>0.9){
+      if(happy>0.9){
 
-                plane.position.x++
+        plane.position.x++
 
-  }
+      }
 
-  if(surprised>0.9){
+      if(surprised>0.9){
 
-      plane.position.x--
+        plane.position.x--
 
-  }
-  scoreDisplay.innerHTML = ' '+ score
+      }
+      scoreDisplay.innerHTML = ' '+ score
       livesDisplay.innerHTML = ' '+ lives
       if(cannonDebugRenderer){
         cannonDebugRenderer.update()
       }
-            }
+    }
 
-            function render() {
-
-
-              //console.log(camera)
+    function render() {
 
 
+      //console.log(camera)
 
 
 
 
-  //               if(cannonDebugRenderer){
-  //   cannonDebugRenderer.update()
-  // }
-  updatePhysics()
-                renderer.render( scene, camera );
-
-            }
 
 
-            animate()
-            function updatePhysics() {
+      //               if(cannonDebugRenderer){
+      //   cannonDebugRenderer.update()
+      // }
+      updatePhysics()
+      renderer.render( scene, camera )
+
+    }
+
+
+    animate()
+    function updatePhysics() {
       // Step the physics world
-      world.step(timeStep)
+
 
       for(var j=0; j<balls.length; j++){
         ballMeshes[j].position.copy(balls[j].position)
         ballMeshes[j].quaternion.copy(balls[j].quaternion)
       }
+      world.step(timeStep)
     }
   }
 
