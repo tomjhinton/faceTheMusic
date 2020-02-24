@@ -11,7 +11,7 @@ import '@babel/polyfill'
 import '@tensorflow/tfjs-core'
 import '@tensorflow/tfjs-converter'
 import '../style.scss'
-
+import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
 class Main extends React.Component{
   constructor(){
     super()
@@ -171,7 +171,7 @@ class Main extends React.Component{
       }, 100)
     })
     const scene = new THREE.Scene()
-
+    // scene.background = new THREE.Color( 0x0000ff );
     const light = new THREE.DirectionalLight( 0xffffff )
     light.position.set( 40, 25, 10 )
     light.castShadow = true
@@ -179,47 +179,78 @@ class Main extends React.Component{
 
     //console.log(scene.scene)
 
-    const renderer = new THREE.WebGLRenderer()
+    const renderer = new THREE.WebGLRenderer({alpha: false})
     renderer.setSize( window.innerWidth, window.innerHeight )
     document.body.appendChild( renderer.domElement )
     //var controls = new OrbitControls( camera, renderer.domElement );
     let world, timeStep=1/60, ballBody, ballShape, ballMaterial, wallContactMaterial
 
-
-    const ballMeshes = []
-    const balls = []
+    let ballMeshes = []
+    let balls = []
     let groundBody, groundShape ,wallMaterial
 
     world = new CANNON.World()
-    world.gravity.set(0,-40,0)
+    world.gravity.set(0,-40,-20)
     world.broadphase = new CANNON.NaiveBroadphase()
     world.solver.iterations = 10
 
     const camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 3000 )
-    camera.position.z = 20
+    camera.position.z = 80
+    const controls = new OrbitControls( camera, renderer.domElement )
 
-    let texture = new THREE.CanvasTexture(canvas)
+    const texture = new THREE.CanvasTexture(canvas)
+    const playerThreeGeo = new THREE.BoxBufferGeometry( 32, 16, 2 )
+    const playerThreeMat = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide, map: texture} )
+    const playerThree = new THREE.Mesh( playerThreeGeo, playerThreeMat )
+    playerThree.position.y = -5
+    scene.add(playerThree)
+    const playerMaterial  = new CANNON.Material('playerMaterial')
+    const  playerShape = new CANNON.Box(new CANNON.Vec3(16,8,1))
+    const playerBody = new CANNON.Body({ mass: 0, material: playerMaterial })
+    playerBody.addShape(playerShape)
+    world.addBody(playerBody)
+    playerBody.addEventListener('collide',function(e){
 
-    var geometry = new THREE.PlaneGeometry( 8, 4, 24, 12 );
-    var material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide, map: texture} );
-    let plane = new THREE.Mesh( geometry, material );
+      score++
+      if(playing){
 
-    scene.add(plane)
-    let playerMaterial  = new CANNON.Material('playerMaterial')
-    let  playerShape = new CANNON.Box(new CANNON.Vec3(300,300,2))
-    let playerBody = new CANNON.Body({ mass: 0, material: wallMaterial })
-    groundBody.addShape(groundShape)
-    let groundGeo = new  THREE.BoxBufferGeometry( 600, 600, 4 );
-    var groundMaterial = new THREE.MeshBasicMaterial( {color: 0xff00ff, side: THREE.DoubleSide} );
-    let ground  = new THREE.Mesh( groundGeo, groundMaterial );
+
+        balls.map(x=>{
+
+          world.remove(x)
+
+        } )
+        ballMeshes.map(x=>{
+          x.geometry.dispose()
+          x.material.dispose()
+          scene.remove( x )
+        } )
+        balls = []
+        ballMeshes = []
+        sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
+        ballCreate(Math.floor(Math.random()*25), Math.floor(Math.random()*25))
+
+
+      }
+    })
+
+
+    var WIDTH = window.innerWidth;
+		var HEIGHT = window.innerHeight;
+
+    const groundGeo = new  THREE.BoxBufferGeometry( 300, 300, 4 )
+    var groundMaterial = new THREE.MeshBasicMaterial( {color: 0xff00ff, side: THREE.DoubleSide} )
+    const ground  = new Reflector( groundGeo, {
+					clipBias: 0.003,
+					textureWidth: WIDTH * window.devicePixelRatio,
+					textureHeight: HEIGHT * window.devicePixelRatio,
+					color: 0x000000,
+					recursion: 1
+				} )
     ground.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2)
     ground.position.y = -10
     scene.add(ground)
-    var controls = new OrbitControls( camera, renderer.domElement );
-
-
     wallMaterial = new CANNON.Material('wallMaterial')
-
     ballMaterial = new CANNON.Material('ballMaterial')
     wallContactMaterial = new CANNON.ContactMaterial(ballMaterial, wallMaterial)
     wallContactMaterial.friction = 0.1
@@ -250,10 +281,10 @@ class Main extends React.Component{
       ballBody.linearDamping = 0
       world.addBody(ballBody)
       balls.push(ballBody)
-      ballBody.position.set(x,y,20)
+      ballBody.position.set(x,y,60)
       ballBody.velocity.z = -10
       ballBody.addEventListener('collide',function(e){
-        console.log(ballBody)
+
 
         if(playing){
 
@@ -278,25 +309,43 @@ class Main extends React.Component{
 
       if(happy>0.9){
 
-        plane.position.x++
+        playerThree.position.x++
 
       }
 
       if(surprised>0.9){
 
-        plane.position.x--
+        playerThree.position.x--
 
       }
       scoreDisplay.innerHTML = ' '+ score
       livesDisplay.innerHTML = ' '+ lives
       if(cannonDebugRenderer){
-        cannonDebugRenderer.update()
+        // cannonDebugRenderer.update()
       }
     }
 
     function render() {
 
+      balls.map(x => {
+        if(x.position.z <  playerThree.position.z){
+          lives--
+          balls.map(x=>{
 
+            world.remove(x)
+
+          } )
+          ballMeshes.map(x=>{
+            x.geometry.dispose()
+            x.material.dispose()
+            scene.remove( x )
+          } )
+          balls = []
+          ballMeshes = []
+          sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
+          ballCreate(Math.floor(Math.random()*25), Math.floor(Math.random()*25))
+        }
+      })
       //console.log(camera)
 
 
@@ -316,7 +365,7 @@ class Main extends React.Component{
     animate()
     function updatePhysics() {
       // Step the physics world
-
+      playerBody.position.copy(playerThree.position)
 
       for(var j=0; j<balls.length; j++){
         ballMeshes[j].position.copy(balls[j].position)
