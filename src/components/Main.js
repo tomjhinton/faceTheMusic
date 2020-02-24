@@ -12,6 +12,22 @@ import '@tensorflow/tfjs-core'
 import '@tensorflow/tfjs-converter'
 import '../style.scss'
 import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
+import Typed from 'typed.js'
+
+
+
+// const typed = new Typed('#title', options)
+
+
+var resetT = {
+  strings: ['', 'GAME OVER   : R TO RESET'],
+  typeSpeed: 100,
+  loop: true,
+  loopCount: Infinity,
+  backSpeed: 100,
+  showCursor: false
+
+}
 class Main extends React.Component{
   constructor(){
     super()
@@ -30,7 +46,21 @@ class Main extends React.Component{
 
 
   componentDidMount(){
+    document.body.addEventListener('keydown', function (e) {
+  e.preventDefault();
 
+  if(e.keyCode===82){
+    score = 0
+    lives = 5
+    reset.innerHTML = ''
+    reset.classList.add('hide')
+
+  }
+
+
+})
+
+    const resetTyped = new Typed('#reset', resetT)
     const scoreDisplay = document.getElementById('score')
     const livesDisplay = document.getElementById('lives')
     const ballsIn = document.getElementById('ballsIn')
@@ -171,7 +201,7 @@ class Main extends React.Component{
       }, 100)
     })
     const scene = new THREE.Scene()
-    // scene.background = new THREE.Color( 0x0000ff );
+    scene.background = new THREE.Color( 0xffffff );
     const light = new THREE.DirectionalLight( 0xffffff )
     light.position.set( 40, 25, 10 )
     light.castShadow = true
@@ -199,13 +229,13 @@ class Main extends React.Component{
     const controls = new OrbitControls( camera, renderer.domElement )
 
     const texture = new THREE.CanvasTexture(canvas)
-    const playerThreeGeo = new THREE.BoxBufferGeometry( 32, 16, 2 )
+    const playerThreeGeo = new THREE.BoxBufferGeometry( 16, 8, 2 )
     const playerThreeMat = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide, map: texture} )
     const playerThree = new THREE.Mesh( playerThreeGeo, playerThreeMat )
     playerThree.position.y = -5
     scene.add(playerThree)
     const playerMaterial  = new CANNON.Material('playerMaterial')
-    const  playerShape = new CANNON.Box(new CANNON.Vec3(16,8,1))
+    const  playerShape = new CANNON.Box(new CANNON.Vec3(8,4,1))
     const playerBody = new CANNON.Body({ mass: 0, material: playerMaterial })
     playerBody.addShape(playerShape)
     world.addBody(playerBody)
@@ -227,7 +257,7 @@ class Main extends React.Component{
         } )
         balls = []
         ballMeshes = []
-        sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
+        //sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
         ballCreate(Math.floor(Math.random()*25), Math.floor(Math.random()*25))
 
 
@@ -288,7 +318,7 @@ class Main extends React.Component{
 
         if(playing){
 
-          sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
+          //sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
 
 
 
@@ -301,6 +331,12 @@ class Main extends React.Component{
 
       requestAnimationFrame( animate )
       // controls.update();
+      if(lives <= 0){
+        canvas.classList.add('over')
+        reset.classList.remove('hide')
+        lives = 0
+        livesDisplay.innerHTML = lives
+      }
 
       render()
       if(texture){
@@ -342,7 +378,7 @@ class Main extends React.Component{
           } )
           balls = []
           ballMeshes = []
-          sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
+          //sampler.triggerAttackRelease(drums[Math.floor(Math.random()*5)], 1)
           ballCreate(Math.floor(Math.random()*25), Math.floor(Math.random()*25))
         }
       })
@@ -395,6 +431,7 @@ class Main extends React.Component{
      Lives  :<span id="lives" className="banner"></span>
 
         </div>
+        <div id="reset" className="hide"></div>
         <video autoPlay playsInline muted id="webcam" width="500px" height="500px" poster='' ></video>
         <canvas id="canvas" width="500" height="500"></canvas>
 

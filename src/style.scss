@@ -45,3 +45,21 @@
   color:red;
 
 }
+
+.hide{
+  visibility: hidden;
+}
+
+#reset{
+  font-family: "Tapeworm";
+  position: absolute;
+  color:#4AF626;
+  margin: auto;
+  left: 200px;
+  top: 80vh;
+  font-size: 5em;
+  -webkit-animation: resetAnim 5s ease-out;
+  -webkit-animation-iteration-count: infinite;
+   text-shadow: 2px 2px #ff0000;
+  z-index: 3;
+}
