@@ -112,6 +112,7 @@ class Main extends React.Component{
       const net = await bodyPix.load(/** optional arguments, see below **/)
 
           async function draw(){
+              ballCreate(Math.floor(Math.random()*25), Math.floor(Math.random()*25))
             window.requestAnimFrame = (function(){
           return  window.requestAnimationFrame       ||
               window.webkitRequestAnimationFrame ||
@@ -177,7 +178,7 @@ class Main extends React.Component{
     ]).then( x=> {
       setupWebcam()
       ready = true
-      ballCreate(Math.floor(Math.random()*25), Math.floor(Math.random()*25))
+
       // instructions.innerText=
       //   'The balls are controlled by surpised or happy faces.'
     })
@@ -270,6 +271,7 @@ class Main extends React.Component{
 
     const groundGeo = new  THREE.BoxBufferGeometry( 300, 300, 4 )
     var groundMaterial = new THREE.MeshBasicMaterial( {color: 0xff00ff, side: THREE.DoubleSide} )
+    const ceilingGeo = new  THREE.BoxBufferGeometry( 300, 300, 4 )
     const ground  = new Reflector( groundGeo, {
 					clipBias: 0.003,
 					textureWidth: WIDTH * window.devicePixelRatio,
@@ -277,7 +279,9 @@ class Main extends React.Component{
 					color: 0x000000,
 					recursion: 1
 				} )
+
     ground.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2)
+    
     ground.position.y = -10
     scene.add(ground)
     wallMaterial = new CANNON.Material('wallMaterial')
