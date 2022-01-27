@@ -33,7 +33,7 @@
     "react-router-dom": "^5.1.2",
     "sass-loader": "^8.0.0",
     "style-loader": "^1.0.0",
-    "three": "^0.112.1",
+    "three": "^0.137.0",
     "tone": "^13.8.25",
     "typed.js": "^2.0.11",
     "webpack": "^4.41.2",
